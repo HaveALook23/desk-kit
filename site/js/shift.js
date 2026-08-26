@@ -55,14 +55,28 @@ export const SHIFT_PATTERNS = {
     ],
   },
   pattern5: {
-    name: '五天工作週（星期六日放假）',
-    cyclic: false,
-    shifts: [
-      { name: '常規工作', kind: 'work' },
-      { name: '週末放假', kind: 'off' },
-    ],
+  name: '五天工作週（星期六日放假）',
+  cyclic: false,
+  shifts: [
+    { name: '常規工作', kind: 'work' },
+    { name: '週末放假', kind: 'off' },
+  ],
   },
-};
+  cne8: {
+  name: '八日更：頭早 二早 頭晏 二晏 頭通 尾通 假OFF OFF',
+  cyclic: true,
+  shifts: [
+    { name: '頭早', kind: 'morning' },
+    { name: '二早', kind: 'morning' },
+    { name: '頭晏', kind: 'afternoon' },
+    { name: '二晏', kind: 'afternoon' },
+    { name: '頭通', kind: 'night' },
+    { name: '尾通', kind: 'night' },
+    { name: '假OFF', kind: 'off-prep' },
+    { name: 'OFF', kind: 'off' },
+  ],
+  },
+  };
 
 function daysBetweenLocal(a, b) {
   const utcA = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
@@ -94,3 +108,23 @@ export function monthGrid(year, month) {
   }
   return out;
 }
+
+const WEEKDAYS = '日一二三四五六';
+
+export function rosterToText(staffList, year, month) {
+  const days = monthGrid(year, month);
+  const header = ['日期', '星期', ...staffList.map((s) => s.name || '未命名')];
+  const lines = [header.join('\t')];
+  for (const d of days) {
+    lines.push(
+      [
+        String(d.getDate()).padStart(2, '0'),
+        WEEKDAYS[d.getDay()],
+        ...staffList.map((s) => shiftOnDate(s, d).name),
+      ].join('\t'),
+    );
+  }
+  return lines.join('\n');
+}
+
+export { WEEKDAYS };

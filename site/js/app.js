@@ -10,14 +10,46 @@ import { calculateTobacco } from './tobacco.js';
 import { calculatePension, commutationOptions } from './pension.js';
 import { lookupCspf, projectSandbox, filterCspfFunds } from './cspf.js';
 import { CSPF_FUNDS } from '../data/cspf-funds.js';
-import { SHIFT_PATTERNS, monthGrid, shiftOnDate } from './shift.js';
-import { runLeaveDraw } from './draw.js';
+import { SHIFT_PATTERNS, WEEKDAYS, monthGrid, rosterToText, shiftOnDate } from './shift.js';
+import { formatDrawRecord, runLeaveDraw } from './draw.js';
 import { calculateQuartersPoints } from './quarters.js';
 import { MEAL_PRESETS, splitEquipmentWindow } from './equipment.js';
 
 const LAST_DRAW_KEY = 'desk-kit:last-draw';
+const STAFF_KEY = 'desk-kit:staff';
+const VIEWS = [
+  'home',
+  'tobacco',
+  'pension',
+  'shift',
+  'draw',
+  'equipment',
+  'quarters',
+  'homescreen',
+  'sources',
+];
 
-function showView(name) {
+function parseHash() {
+  const raw = (location.hash || '#home').replace(/^#/, '');
+  const [view, sub] = raw.split('/');
+  return {
+    view: VIEWS.includes(view) ? view : 'home',
+    sub: sub || '',
+  };
+}
+
+function writeHash(view, sub = '') {
+  const next = sub ? `#${view}/${sub}` : `#${view}`;
+  if (location.hash !== next) history.replaceState(null, '', next);
+}
+
+function applyHash() {
+  const { view, sub } = parseHash();
+  showView(view, { fromHash: true });
+  if (view === 'pension') showRetire(sub === 'cspf' ? 'cspf' : 'opsnps', { fromHash: true });
+}
+
+function showView(name, opts = {}) {
   document.querySelectorAll('.view').forEach((v) => {
     v.classList.toggle('active', v.id === `view-${name}`);
   });
@@ -28,6 +60,12 @@ function showView(name) {
   if (name === 'shift') renderShift();
   if (name === 'draw') restoreDraw();
   if (name === 'pension') renderCspfSchemes();
+  if (!opts.fromHash) {
+    const sub = name === 'pension' && !document.getElementById('retire-cspf').classList.contains('hidden')
+      ? 'cspf'
+      : '';
+    writeHash(name, sub);
+  }
 }
 
 function kv(rows) {
@@ -36,6 +74,22 @@ function kv(rows) {
     box.append(el('span', { text: k }), el('span', { text: v }));
   }
   return box;
+}
+
+function copyText(text, okLabel) {
+  const status = document.getElementById('copy-status');
+  const done = (msg) => {
+    if (!status) return;
+    status.textContent = msg;
+  };
+  if (!text) {
+    done('沒有可複製內容');
+    return;
+  }
+  navigator.clipboard.writeText(text).then(
+    () => done(okLabel || '已複製'),
+    () => done('複製失敗，請手動選取'),
+  );
 }
 
 function fillVerified() {
@@ -171,13 +225,14 @@ function onPension(ev) {
   );
 }
 
-function showRetire(name) {
+function showRetire(name, opts = {}) {
   document.getElementById('retire-opsnps').classList.toggle('hidden', name !== 'opsnps');
   document.getElementById('retire-cspf').classList.toggle('hidden', name !== 'cspf');
   document.querySelectorAll('[data-retire]').forEach((b) => {
     if (b.dataset.retire === name) b.setAttribute('aria-current', 'page');
     else b.removeAttribute('aria-current');
   });
+  if (!opts.fromHash) writeHash('pension', name === 'cspf' ? 'cspf' : '');
 }
 
 function fillSchemeList(id, items) {
@@ -359,17 +414,31 @@ function onCspfProj(ev) {
 }
 
 let staffList = [
-  { id: 1, name: '人員 A', patternKey: 'pattern1', anchorDate: '', anchorType: 0 },
+  { id: 1, name: '同事 A', patternKey: 'cne8', anchorDate: '', anchorType: 0 },
 ];
+
+function loadStaff() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(STAFF_KEY) || '');
+    if (Array.isArray(parsed) && parsed.length) staffList = parsed;
+  } catch {
+    /* keep default */
+  }
+}
+
+function saveStaff() {
+  localStorage.setItem(STAFF_KEY, JSON.stringify(staffList));
+}
 
 function renderStaffConfig() {
   const box = document.getElementById('staff-config');
   clearNode(box);
-  staffList.forEach((staff, index) => {
-    const nameInput = el('input', { type: 'text', value: staff.name });
+  staffList.forEach((staff) => {
+    const nameInput = el('input', { type: 'text' });
     nameInput.value = staff.name;
     nameInput.addEventListener('input', () => {
       staff.name = nameInput.value;
+      saveStaff();
       renderRoster();
     });
     const pattern = el('select');
@@ -378,8 +447,23 @@ function renderStaffConfig() {
       if (key === staff.patternKey) opt.selected = true;
       pattern.append(opt);
     }
+    const type = el('select');
+    const fillTypes = () => {
+      clearNode(type);
+      const pat = SHIFT_PATTERNS[staff.patternKey] || SHIFT_PATTERNS.cne8;
+      pat.shifts.forEach((s, i) => {
+        const opt = el('option', { value: String(i), text: `這天是：${s.name}` });
+        if (i === Number(staff.anchorType)) opt.selected = true;
+        type.append(opt);
+      });
+      if (Number(staff.anchorType) >= pat.shifts.length) staff.anchorType = 0;
+    };
+    fillTypes();
     pattern.addEventListener('change', () => {
       staff.patternKey = pattern.value;
+      staff.anchorType = 0;
+      fillTypes();
+      saveStaff();
       renderRoster();
     });
     const date = el('input', { type: 'date' });
@@ -387,23 +471,31 @@ function renderStaffConfig() {
     staff.anchorDate = date.value;
     date.addEventListener('change', () => {
       staff.anchorDate = date.value;
+      saveStaff();
       renderRoster();
     });
-    const type = el('input', { type: 'number', min: '0', value: String(staff.anchorType) });
-    type.addEventListener('input', () => {
+    type.addEventListener('change', () => {
       staff.anchorType = Number(type.value) || 0;
+      saveStaff();
       renderRoster();
     });
     const del = el('button', { class: 'btn-ghost', type: 'button', text: '刪' });
     del.addEventListener('click', () => {
       staffList = staffList.filter((s) => s.id !== staff.id);
+      saveStaff();
       renderShift();
     });
-    box.append(el('div', { class: 'staff-row' }, nameInput, pattern, date, type, del));
-    if (index === 0) {
-      const legend = el('p', { class: 'hint', text: '欄位：姓名、更期、錨點日期、錨點更種序號（由 0 起）' });
-      box.append(legend);
-    }
+    box.append(
+      el(
+        'div',
+        { class: 'staff-card' },
+        labeled('姓名', nameInput),
+        labeled('更期', pattern),
+        labeled('已知一天的日期', date),
+        labeled('那天更種', type),
+        del,
+      ),
+    );
   });
 }
 
@@ -415,14 +507,16 @@ function renderRoster() {
   const days = monthGrid(year, month);
   const box = document.getElementById('shift-table');
   clearNode(box);
+  const today = localISODate();
   const table = el('table');
-  const head = el('tr', {}, el('th', { text: '日' }));
+  const head = el('tr', {}, el('th', { text: '日' }), el('th', { text: '星期' }));
   staffList.forEach((s) => head.append(el('th', { text: s.name || '（未命名）' })));
   table.append(el('thead', {}, head));
   const tbody = el('tbody');
   days.forEach((d) => {
-    const tr = el('tr');
-    tr.append(el('th', { text: String(d.getDate()) }));
+    const iso = localISODate(d);
+    const tr = el('tr', { class: iso === today ? 'today' : '' });
+    tr.append(el('th', { text: String(d.getDate()) }), el('th', { text: WEEKDAYS[d.getDay()] }));
     staffList.forEach((s) => {
       const cell = shiftOnDate(s, d);
       tr.append(el('td', { class: cell.kind, text: cell.name }));
@@ -431,6 +525,13 @@ function renderRoster() {
   });
   table.append(tbody);
   box.append(table);
+}
+
+function copyRoster() {
+  const monthVal = document.getElementById('shift-month').value || localYearMonth();
+  const [ys, ms] = monthVal.split('-');
+  const text = rosterToText(staffList, Number(ys), Number(ms));
+  copyText(text, '已複製更表');
 }
 
 function renderShift() {
@@ -490,6 +591,9 @@ function renderDrawRecord(record) {
     el('p', { class: 'hint', text: '合併雜湊' }),
     el('p', { class: 'hash', text: record.combinedHash }),
   );
+  const copyBtn = el('button', { class: 'btn-ghost', type: 'button', text: '複製紀錄' });
+  copyBtn.addEventListener('click', () => copyText(formatDrawRecord(record), '已複製抽假紀錄'));
+  box.append(el('div', { class: 'actions' }, copyBtn));
 }
 
 function restoreDraw() {
@@ -562,6 +666,12 @@ function onEquipment(ev) {
     const parts = Object.entries(r.totals).map(([k, v]) => `${k} ${v} 分鐘`);
     box.append(el('p', { class: 'hint', text: `裝備合計：${parts.join(' · ')}` }));
   }
+  const text = r.slots
+    .map((s) => `${s.start}–${s.end}　${s.kind === 'meal' ? s.label : s.letter}　${s.minutes}分鐘`)
+    .join('\n');
+  const copyBtn = el('button', { class: 'btn-ghost', type: 'button', text: '複製時間表' });
+  copyBtn.addEventListener('click', () => copyText(text, '已複製時間表'));
+  box.append(el('div', { class: 'actions' }, copyBtn));
 }
 
 let mealRows = MEAL_PRESETS.map((p, i) => ({ ...p, id: i + 1 }));
@@ -684,13 +794,18 @@ function init() {
   document.getElementById('add-staff').addEventListener('click', () => {
     staffList.push({
       id: Date.now(),
-      name: `人員 ${String.fromCharCode(65 + staffList.length)}`,
-      patternKey: 'pattern1',
+      name: `同事 ${String.fromCharCode(65 + staffList.length)}`,
+      patternKey: 'cne8',
       anchorDate: localISODate(),
       anchorType: 0,
     });
+    saveStaff();
     renderShift();
   });
+  const copyRosterBtn = document.getElementById('copy-roster');
+  if (copyRosterBtn) copyRosterBtn.addEventListener('click', copyRoster);
+  const printRosterBtn = document.getElementById('print-roster');
+  if (printRosterBtn) printRosterBtn.addEventListener('click', () => window.print());
   document.getElementById('draw-form').addEventListener('submit', onDraw);
   document.getElementById('draw-new').addEventListener('click', () => {
     sessionStorage.removeItem(LAST_DRAW_KEY);
@@ -715,6 +830,9 @@ function init() {
   document.getElementById('q-form').addEventListener('submit', onQuarters);
   document.getElementById('d-date').value = localISODate();
   document.getElementById('q-deadline').value = localISODate();
+  loadStaff();
+  window.addEventListener('hashchange', applyHash);
+  applyHash();
 }
 
 init();

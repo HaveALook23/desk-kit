@@ -30,3 +30,12 @@ test('cyclic shift is stable across local midnight', () => {
   assert.equal(a.name, '早 1');
   assert.equal(b.name, '早 2');
 });
+
+test('eight-day roster: 15/06/2026 頭早 then wraps', () => {
+  const staff = { patternKey: 'cne8', anchorDate: '2026-06-15', anchorType: 0 };
+  assert.equal(shiftOnDate(staff, parseLocalISODate('2026-06-15')).name, '頭早');
+  assert.equal(shiftOnDate(staff, parseLocalISODate('2026-06-16')).name, '二早');
+  assert.equal(shiftOnDate(staff, parseLocalISODate('2026-06-19')).name, '頭通');
+  assert.equal(shiftOnDate(staff, parseLocalISODate('2026-06-22')).name, 'OFF');
+  assert.equal(shiftOnDate(staff, parseLocalISODate('2026-06-23')).name, '頭早');
+});

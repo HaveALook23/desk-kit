@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseNameList, runLeaveDraw } from '../site/js/draw.js';
+import { formatDrawRecord, parseNameList, runLeaveDraw } from '../site/js/draw.js';
 
 test('parseNameList trims and dedupes', () => {
   assert.deepEqual(parseNameList('  A \nB\nA\n'), ['A', 'B']);
@@ -21,4 +21,7 @@ test('leave draw uses CSPRNG record with hashes', async () => {
   assert.equal(record.resultHash.length, 64);
   assert.equal(record.results[0].selected.length, 2);
   assert.equal(record.participants.length, 4);
+  const text = formatDrawRecord(record);
+  assert.match(text, /Desk Kit 抽假紀錄/);
+  assert.match(text, /合併雜湊/);
 });

@@ -172,14 +172,31 @@ td.afternoon { background: #eff6ff; }
 td.night { background: #f5f3ff; }
 td.swing { background: #eef2ff; }
 
-.staff-row {
+.staff-card {
   display: grid;
-  grid-template-columns: 1.4fr 1.6fr 1fr 4.5rem 2.2rem;
-  gap: 0.4rem;
-  margin-bottom: 0.4rem;
-  align-items: center;
+  grid-template-columns: 1fr 1.4fr 1fr 1fr auto;
+  gap: 0.45rem;
+  align-items: end;
+  margin-bottom: 0.7rem;
+  padding: 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
 }
-@media (max-width: 800px) { .staff-row { grid-template-columns: 1fr; } }
+@media (max-width: 800px) {
+  .staff-card { grid-template-columns: 1fr; }
+}
+
+tr.today th, tr.today td { outline: 2px solid var(--navy); }
+.copy-status { min-height: 1.2rem; color: var(--ok); font-size: 0.86rem; font-weight: 700; }
+
+@media print {
+  .top, nav.tabs, .banner-warn, footer, .actions, .subtabs, .copy-status { display: none !important; }
+  body { background: #fff; }
+  .wrap { max-width: none; padding: 0; }
+  .view { display: none !important; }
+  .view.active { display: block !important; }
+}
 
 .draw-person {
   display: flex;

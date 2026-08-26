@@ -67,3 +67,29 @@ export async function runLeaveDraw({
   record.combinedHash = await sha256Hex(`${inputHash}:${resultHash}`);
   return record;
 }
+
+export function formatDrawRecord(record) {
+  if (!record || record.error) return '';
+  const lines = [
+    'Desk Kit 抽假紀錄',
+    `抽取時間：${record.drawnAt}`,
+    `放假日期：${record.leaveDate || '未填'}`,
+    `見證人：${record.witnesses || '未填'}`,
+    `名額：${record.quota}`,
+    `亂數：${record.rng}`,
+  ];
+  record.results.forEach((round) => {
+    lines.push('', `第 ${round.round} 次`);
+    round.selected.forEach((name, i) => lines.push(`#${i + 1} ${name}　中籤`));
+    round.waitlist.forEach((name, i) =>
+      lines.push(`#${round.selected.length + i + 1} ${name}　候補`),
+    );
+  });
+  lines.push(
+    '',
+    `輸入雜湊：${record.inputHash}`,
+    `結果雜湊：${record.resultHash}`,
+    `合併雜湊：${record.combinedHash}`,
+  );
+  return lines.join('\n');
+}

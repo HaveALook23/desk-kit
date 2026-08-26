@@ -40,6 +40,15 @@ npx --yes serve site
 
 GitHub Pages 只部署 `site/`，workflow 只有一條 Pages 部署（另有一條測試，不會互搶上線內容）。
 
+## 用家點用
+
+網站：https://havealook23.github.io/desk-kit/
+
+- 煙草稅、舊制退休金、CSPF：先對官方來源。CSPF 基金回報是積金局截至 31/07/2026 的曆年表。
+- 更表預設八日更。填一個已知日子同嗰日更種。可複製或列印。名單只存在該裝置。
+- 抽假後複製紀錄（含雜湊）。可以重抽，不能當公正證明。
+- 分享：`#tobacco` `#shift` `#draw` `#equipment` `#pension/cspf`
+
 ## 資料來源（最後核實 26/08/2026）
 
 ### 煙草／應課稅品
