@@ -64,6 +64,27 @@ nav.tabs button[aria-current="page"] {
   border-color: var(--navy);
 }
 
+.subtabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.4rem 0 1rem;
+}
+.subtabs button {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 0.45rem 0.75rem;
+  cursor: pointer;
+  font-weight: 700;
+}
+.subtabs button[aria-current="page"] {
+  background: var(--navy);
+  color: #fff;
+  border-color: var(--navy);
+}
+
 .view { display: none; }
 .view.active { display: block; }
 

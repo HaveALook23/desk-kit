@@ -8,6 +8,7 @@ import {
 } from './util.js';
 import { calculateTobacco } from './tobacco.js';
 import { calculatePension, commutationOptions } from './pension.js';
+import { lookupCspf, projectSandbox } from './cspf.js';
 import { SHIFT_PATTERNS, monthGrid, shiftOnDate } from './shift.js';
 import { runLeaveDraw } from './draw.js';
 import { calculateQuartersPoints } from './quarters.js';
@@ -25,6 +26,7 @@ function showView(name) {
   });
   if (name === 'shift') renderShift();
   if (name === 'draw') restoreDraw();
+  if (name === 'pension') renderCspfSchemes();
 }
 
 function kv(rows) {
@@ -164,6 +166,100 @@ function onPension(ev) {
     el('p', {
       class: 'hint',
       text: `最後核實 ${r.lastVerified}。公務員事務局亦聲明其計算器只是粗略參考。`,
+    }),
+  );
+}
+
+function showRetire(name) {
+  document.getElementById('retire-opsnps').classList.toggle('hidden', name !== 'opsnps');
+  document.getElementById('retire-cspf').classList.toggle('hidden', name !== 'cspf');
+  document.querySelectorAll('[data-retire]').forEach((b) => {
+    if (b.dataset.retire === name) b.setAttribute('aria-current', 'page');
+    else b.removeAttribute('aria-current');
+  });
+}
+
+function fillSchemeList(id, items) {
+  const box = document.getElementById(id);
+  if (!box) return;
+  clearNode(box);
+  items.forEach((s) => {
+    const a = el('a', { href: s.url, target: '_blank', rel: 'noopener', text: s.name });
+    const li = el('li');
+    li.append(a, document.createTextNode(`　熱線 ${s.hotline}`));
+    box.append(li);
+  });
+}
+
+function renderCspfSchemes() {
+  fillSchemeList('cspf-schemes-2026', LEGAL_DATA.cspf.schemes2026);
+  fillSchemeList('cspf-schemes-old', LEGAL_DATA.cspf.schemesBefore2026);
+}
+
+function onCspf(ev) {
+  ev.preventDefault();
+  const r = lookupCspf({
+    cohort: document.getElementById('cspf-cohort').value,
+    completedYears: document.getElementById('cspf-years').value,
+    disciplined: document.getElementById('cspf-disc').value === 'yes',
+    monthlySalary: document.getElementById('cspf-salary').value,
+  });
+  const box = document.getElementById('cspf-result');
+  clearNode(box);
+  box.classList.remove('hidden');
+  if (r.error) {
+    box.append(el('p', { class: 'bad', text: r.error }));
+    return;
+  }
+  const rows = [
+    ['供款表', r.cohort === 'legacy' ? '未延長服務（舊表）' : '延長服務／2015 後入職'],
+    ['年資檔', r.bandLabel],
+    ['政府供款率（基本薪金）', `${(r.govRate * 100).toFixed(0)}%`],
+    ['特別紀律部隊供款', r.sdscRate ? `${(r.sdscRate * 100).toFixed(1)}%` : '不適用'],
+  ];
+  if (r.totalMonthly != null) {
+    rows.push(['本月政府供款粗算', `HK$ ${formatHkd(r.govMonthly, 0)}`]);
+    if (r.sdscRate) rows.push(['本月特別供款粗算', `HK$ ${formatHkd(r.sdscMonthly, 0)}`]);
+    rows.push(['本月合計粗算', `HK$ ${formatHkd(r.totalMonthly, 0)}`]);
+  }
+  box.append(el('h3', { text: '現時供款率' }), kv(rows));
+  box.append(
+    el('p', {
+      class: r.gvcLikelyVested ? 'ok' : 'warn',
+      text: r.gvcLikelyVested
+        ? '按公開規則，連續服務滿 10 年（或已屆正常退休年齡）才會歸屬政府自願性供款。實際發放仍要部門核對，亦可能因紀律理由被扣減。'
+        : '按公開規則，未滿 10 年且未屆正常退休年齡，政府自願性供款歸屬比率為 0%。離職通常只帶走強制性供款及你自己的自願供款。',
+    }),
+    el('p', { class: 'hint', text: LEGAL_DATA.cspf.gmcNote }),
+    el('p', { class: 'hint', text: `最後核實 ${r.lastVerified}。這不是帳戶結餘。` }),
+  );
+}
+
+function onCspfProj(ev) {
+  ev.preventDefault();
+  const r = projectSandbox({
+    currentBalance: document.getElementById('cspf-bal').value,
+    monthlyAmount: document.getElementById('cspf-pmt').value,
+    years: document.getElementById('cspf-horizon').value,
+    annualReturnPct: document.getElementById('cspf-return').value,
+  });
+  const box = document.getElementById('cspf-proj-result');
+  clearNode(box);
+  box.classList.remove('hidden');
+  if (r.error) {
+    box.append(el('p', { class: 'bad', text: r.error }));
+    return;
+  }
+  box.append(
+    el('h3', { text: '假設結果' }),
+    kv([
+      ['期末粗算', `HK$ ${formatHkd(r.futureValue, 0)}`],
+      ['來自現有結餘', `HK$ ${formatHkd(r.fromBalance, 0)}`],
+      ['來自其後供款', `HK$ ${formatHkd(r.fromContrib, 0)}`],
+    ]),
+    el('p', {
+      class: 'warn',
+      text: '假設每月供款不變、回報每年固定。薪金會加、供款率會跳級、基金有賺有蝕。這不是預測。',
     }),
   );
 }
@@ -480,6 +576,12 @@ function init() {
   document.getElementById('p-scheme').addEventListener('change', fillCommutes);
   document.getElementById('tobacco-form').addEventListener('submit', onTobacco);
   document.getElementById('pension-form').addEventListener('submit', onPension);
+  document.querySelectorAll('[data-retire]').forEach((b) => {
+    b.addEventListener('click', () => showRetire(b.dataset.retire));
+  });
+  document.getElementById('cspf-form').addEventListener('submit', onCspf);
+  document.getElementById('cspf-proj-form').addEventListener('submit', onCspfProj);
+  renderCspfSchemes();
   document.getElementById('shift-month').addEventListener('change', renderRoster);
   document.getElementById('add-staff').addEventListener('click', () => {
     staffList.push({

@@ -25,7 +25,7 @@
     <nav class="tabs" aria-label="功能">
       <button type="button" data-view="home" aria-current="page">首頁</button>
       <button type="button" data-view="tobacco">煙草稅</button>
-      <button type="button" data-view="pension">退休金</button>
+      <button type="button" data-view="pension">退休／公積金</button>
       <button type="button" data-view="shift">更表</button>
       <button type="button" data-view="draw">抽假</button>
       <button type="button" data-view="equipment">時間分配</button>
@@ -42,8 +42,8 @@
           <button class="linkish" type="button" data-view="tobacco">開啟</button>
         </article>
         <article class="card">
-          <h2>退休金試算</h2>
-          <p>NPS 最高折算 50%，OPS 最高 25%。只覆蓋正常退休粗算，特殊情況請用公務員事務局計算器。</p>
+          <h2>退休金／公積金</h2>
+          <p>舊制 OPS／NPS 粗算，或新制 CSPF 供款率與基金入口。CSPF 不是個人帳戶結餘。</p>
           <button class="linkish" type="button" data-view="pension">開啟</button>
         </article>
         <article class="card">
@@ -132,8 +132,15 @@
 
     <section id="view-pension" class="view">
       <article class="card">
-        <h2>公務員退休金粗算</h2>
-        <p class="hint">最後核實：<span data-bind="verified"></span>。只覆蓋正常退休；運作需要退休、喪失工作能力、超額人員請用公務員事務局官方計算器。</p>
+        <h2>退休福利參考</h2>
+        <p class="hint">最後核實：<span data-bind="verified"></span>。舊制與 CSPF 是兩套制度，不能混用同一條公式。</p>
+        <div class="subtabs" role="tablist" aria-label="退休制度">
+          <button type="button" data-retire="opsnps" aria-current="page">舊制 OPS／NPS</button>
+          <button type="button" data-retire="cspf">新制 CSPF</button>
+        </div>
+
+        <div id="retire-opsnps">
+        <p class="hint">只覆蓋正常退休；運作需要退休、喪失工作能力、超額人員請用公務員事務局官方計算器。</p>
         <form id="pension-form">
           <div class="row two">
             <div>
@@ -182,6 +189,81 @@
           </div>
         </form>
         <div id="pension-result" class="result hidden"></div>
+        </div>
+
+        <div id="retire-cspf" class="hidden">
+          <p class="hint">適用於 2000-06-01 或之後按新入職條款受聘、其後轉新長期聘用條款的人員。本頁只查<strong>現時政府供款率</strong>及提供基金比較入口，<strong>不會</strong>算出你帳戶有多少錢。</p>
+          <form id="cspf-form">
+            <div class="row two">
+              <div>
+                <label for="cspf-cohort">適用供款表</label>
+                <select id="cspf-cohort">
+                  <option value="extended">2015-06-01 或之後入職，或已選擇延長服務</option>
+                  <option value="legacy">2000-06-01 至 2015-06-01 前入職，且沒有選擇延長服務</option>
+                </select>
+              </div>
+              <div>
+                <label for="cspf-years">已完成無間斷服務年期</label>
+                <input id="cspf-years" type="number" min="0" max="50" step="1" value="10" required>
+              </div>
+              <div>
+                <label for="cspf-disc">紀律部隊</label>
+                <select id="cspf-disc">
+                  <option value="yes">是（另加 2.5% 特別紀律部隊供款）</option>
+                  <option value="no">否</option>
+                </select>
+              </div>
+              <div>
+                <label for="cspf-salary">實任職級基本月薪（可選，只作本月供款粗算）</label>
+                <input id="cspf-salary" type="number" min="0" step="1" placeholder="例如 40000">
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn-primary" type="submit">查供款率</button>
+              <a class="btn btn-ghost" href="https://www.csb.gov.hk/tc_chi/admin/retirement/421.html" target="_blank" rel="noopener">公務員事務局要點</a>
+            </div>
+          </form>
+          <div id="cspf-result" class="result hidden"></div>
+
+          <h3>基金過往表現怎麼查</h3>
+          <p>不在本站寫死回報數字：基金每日變，寫死就會像過時刑罰一樣靜默出錯。公務員事務局指引是到積金局「強積金基金平台」比較風險、回報、收費。</p>
+          <p class="hint">過往表現不代表將來。結餘、基金比重只在你的受託人帳戶／月結單。</p>
+          <div class="actions">
+            <a class="btn btn-primary" href="https://mfp.mpfa.org.hk/tch/mpp_selection.jsp" target="_blank" rel="noopener">積金局基金平台</a>
+            <a class="btn btn-ghost" href="https://tscplatform.mpfa.org.hk/scp/tch/index.jsp" target="_blank" rel="noopener">受託人服務比較</a>
+          </div>
+          <h4>2026 年選定的集成信託計劃</h4>
+          <ul id="cspf-schemes-2026" class="sources"></ul>
+          <h4>2026 年前選定（舊帳戶可能仍在）</h4>
+          <ul id="cspf-schemes-old" class="sources"></ul>
+
+          <h3>假設試算（自行填月結單數字）</h3>
+          <p class="hint">用你月結單上的現有結餘和每月供款，再自訂年回報。這是複利算術，不是官方預測，也不是投資建議。</p>
+          <form id="cspf-proj-form">
+            <div class="row two">
+              <div>
+                <label for="cspf-bal">現有結餘（港元）</label>
+                <input id="cspf-bal" type="number" min="0" step="1" value="0">
+              </div>
+              <div>
+                <label for="cspf-pmt">每月供款（港元，可含自己＋政府）</label>
+                <input id="cspf-pmt" type="number" min="0" step="1" required>
+              </div>
+              <div>
+                <label for="cspf-horizon">再供多少年</label>
+                <input id="cspf-horizon" type="number" min="1" max="50" step="1" value="20">
+              </div>
+              <div>
+                <label for="cspf-return">假設每年回報（%）</label>
+                <input id="cspf-return" type="number" min="-20" max="20" step="0.1" value="0">
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn-primary" type="submit">試算</button>
+            </div>
+          </form>
+          <div id="cspf-proj-result" class="result hidden"></div>
+        </div>
       </article>
     </section>
 
@@ -362,13 +444,21 @@
           <li><a href="https://www.info.gov.hk/gia/general/202403/18/P2024031800529.htm">政府新聞公報 18/03/2024（Compounding Scheme：5 倍稅款 + $2,000）</a></li>
           <li><a href="https://www.info.gov.hk/gia/general/202509/25/P2025092300405.htm">立法會書面答覆 25/09/2025（有代價地不予檢控 $2,000 → $5,000）</a></li>
         </ul>
-        <h3>退休金</h3>
+        <h3>退休金（OPS／NPS）</h3>
         <ul class="sources">
           <li><a href="https://www.csb.gov.hk/english/admin/retirement/185.html">公務員事務局：Pension calculator</a></li>
           <li><a href="https://www.csb.gov.hk/english/admin/retirement/2541.html">公務員事務局：退休福利常見問題</a></li>
           <li><a href="https://www.csb.gov.hk/english/admin/retirement/files/guide_nps.doc">NPS 計算指引</a></li>
           <li><a href="https://www.csb.gov.hk/english/admin/retirement/files/guide_ops.doc">OPS 計算指引</a></li>
           <li><a href="https://www.try.gov.hk/internet/ehpens_faq.html">庫務署：Pensioners FAQ</a></li>
+        </ul>
+        <h3>公務員公積金計劃（CSPF）</h3>
+        <ul class="sources">
+          <li><a href="https://www.csb.gov.hk/tc_chi/admin/retirement/421.html">公務員事務局：公積金計劃的要點</a></li>
+          <li><a href="https://www.csb.gov.hk/english/admin/retirement/cspf/cspfcorner/cspfquestion/2871.html">公務員事務局：供款</a></li>
+          <li><a href="https://www.csb.gov.hk/tc_chi/admin/retirement/cspf/cspfcorner/cspfquestion/2872.html">公務員事務局：權益歸屬及發放</a></li>
+          <li><a href="https://www.csb.gov.hk/tc_chi/admin/retirement/cspf/cspfcorner/cspfcontact/2863.html">公務員事務局：選定的集成信託計劃</a></li>
+          <li><a href="https://mfp.mpfa.org.hk/tch/mpp_selection.jsp">積金局：強積金基金平台</a></li>
         </ul>
         <h3>不做的事</h3>
         <ul>
