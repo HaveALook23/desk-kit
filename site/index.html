@@ -58,7 +58,7 @@
         </article>
         <article class="card">
           <h2>裝備時間分配</h2>
-          <p>把時段平均分給 A、B、C… 人員。</p>
+          <p>可預留早餐／午餐等固定時段（落在合理食用時間），其餘裝備時間平均分。</p>
           <button class="linkish" type="button" data-view="equipment">開啟</button>
         </article>
         <article class="card">
@@ -243,27 +243,31 @@
     <section id="view-equipment" class="view">
       <article class="card">
         <h2>裝備時間分配</h2>
+        <p class="hint">預設例子：08:10–16:00，早餐 30 分鐘（約 08:30）、午餐 60 分鐘（約 12:00）。固定時段可加多於一段；其餘裝備時間才平均分給 A、B、C…</p>
         <form id="eq-form">
           <div class="row two">
             <div>
-              <label for="eq-sh">開始小時</label>
-              <input id="eq-sh" type="number" min="0" max="23" value="8">
+              <label for="eq-start">開始</label>
+              <input id="eq-start" type="time" value="08:10" required>
             </div>
             <div>
-              <label for="eq-sm">開始分鐘</label>
-              <input id="eq-sm" type="number" min="0" max="59" value="0">
-            </div>
-            <div>
-              <label for="eq-eh">結束小時</label>
-              <input id="eq-eh" type="number" min="0" max="23" value="16">
-            </div>
-            <div>
-              <label for="eq-em">結束分鐘</label>
-              <input id="eq-em" type="number" min="0" max="59" value="0">
+              <label for="eq-end">結束</label>
+              <input id="eq-end" type="time" value="16:00" required>
             </div>
             <div>
               <label for="eq-n">人數</label>
               <input id="eq-n" type="number" min="1" max="26" value="4">
+            </div>
+          </div>
+          <label class="check-row">
+            <input id="eq-meals-on" type="checkbox" checked>
+            預留固定用餐／休息時段，其餘平均分配
+          </label>
+          <div id="eq-meals-box">
+            <p class="hint">「食用時段」是可接受範圍；實際開始會盡量用「建議開始」（早餐 08:30、午餐 12:00）。多段不可重疊時會自動錯開。</p>
+            <div id="eq-meals-list"></div>
+            <div class="actions">
+              <button class="btn-ghost" type="button" id="eq-add-meal">加時段</button>
             </div>
           </div>
           <div class="actions">

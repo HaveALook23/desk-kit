@@ -11,7 +11,7 @@ import { calculatePension, commutationOptions } from './pension.js';
 import { SHIFT_PATTERNS, monthGrid, shiftOnDate } from './shift.js';
 import { runLeaveDraw } from './draw.js';
 import { calculateQuartersPoints } from './quarters.js';
-import { splitEquipmentWindow } from './equipment.js';
+import { MEAL_PRESETS, splitEquipmentWindow } from './equipment.js';
 
 const LAST_DRAW_KEY = 'desk-kit:last-draw';
 
@@ -332,12 +332,12 @@ async function onDraw(ev) {
 
 function onEquipment(ev) {
   ev.preventDefault();
+  const useMeals = document.getElementById('eq-meals-on').checked;
   const r = splitEquipmentWindow({
-    startHour: document.getElementById('eq-sh').value,
-    startMin: document.getElementById('eq-sm').value,
-    endHour: document.getElementById('eq-eh').value,
-    endMin: document.getElementById('eq-em').value,
+    startClock: document.getElementById('eq-start').value,
+    endClock: document.getElementById('eq-end').value,
     staffCount: document.getElementById('eq-n').value,
+    breaks: useMeals ? mealRows.map((row) => ({ ...row })) : [],
   });
   const box = document.getElementById('eq-result');
   clearNode(box);
@@ -346,9 +346,91 @@ function onEquipment(ev) {
     box.append(el('p', { class: 'bad', text: r.error }));
     return;
   }
+  if (r.workTotalMins != null && r.workTotalMins !== r.totalDurationMins) {
+    box.append(
+      el('p', {
+        text: `當更 ${r.totalDurationMins} 分鐘，固定時段 ${r.totalDurationMins - r.workTotalMins} 分鐘，裝備 ${r.workTotalMins} 分鐘，每人 ${r.perPersonMins} 分鐘。`,
+      }),
+    );
+  }
+  const list = el('div', { class: 'tl' });
   r.slots.forEach((s) => {
-    box.append(el('p', { text: `${s.letter}　${s.start} – ${s.end}` }));
+    const isMeal = s.kind === 'meal';
+    const title = isMeal ? s.label : s.letter;
+    list.append(
+      el(
+        'div',
+        { class: isMeal ? 'tl-item meal' : 'tl-item duty' },
+        el('span', { class: 'tl-time', text: `${s.start} – ${s.end}` }),
+        el('span', { class: 'tl-who', text: title }),
+        el('span', { class: 'tl-mins', text: `${s.minutes} 分鐘` }),
+      ),
+    );
   });
+  box.append(list);
+  if (r.totals) {
+    const parts = Object.entries(r.totals).map(([k, v]) => `${k} ${v} 分鐘`);
+    box.append(el('p', { class: 'hint', text: `裝備合計：${parts.join(' · ')}` }));
+  }
+}
+
+let mealRows = MEAL_PRESETS.map((p, i) => ({ ...p, id: i + 1 }));
+let mealSeq = mealRows.length;
+
+function renderMealRows() {
+  const box = document.getElementById('eq-meals-list');
+  clearNode(box);
+  mealRows.forEach((row) => {
+    const label = el('input', { type: 'text' });
+    label.value = row.label;
+    label.addEventListener('input', () => {
+      row.label = label.value;
+    });
+    const dur = el('input', { type: 'number', min: '1', max: '240' });
+    dur.value = String(row.durationMin);
+    dur.addEventListener('input', () => {
+      row.durationMin = Number(dur.value);
+    });
+    const w0 = el('input', { type: 'time' });
+    w0.value = row.windowStart;
+    w0.addEventListener('change', () => {
+      row.windowStart = w0.value;
+    });
+    const w1 = el('input', { type: 'time' });
+    w1.value = row.windowEnd;
+    w1.addEventListener('change', () => {
+      row.windowEnd = w1.value;
+    });
+    const pref = el('input', { type: 'time' });
+    pref.value = row.preferStart || '';
+    pref.addEventListener('change', () => {
+      row.preferStart = pref.value || undefined;
+    });
+    const del = el('button', { class: 'btn-ghost', type: 'button', text: '刪' });
+    del.addEventListener('click', () => {
+      mealRows = mealRows.filter((x) => x.id !== row.id);
+      renderMealRows();
+    });
+    const wrap = el('div', { class: 'meal-row' });
+    wrap.append(
+      labeled('名稱', label),
+      labeled('時長（分）', dur),
+      labeled('食用由', w0),
+      labeled('食用至', w1),
+      labeled('建議開始', pref),
+      del,
+    );
+    box.append(wrap);
+  });
+}
+
+function labeled(text, control) {
+  return el('div', {}, el('label', { text }), control);
+}
+
+function toggleMealsBox() {
+  const on = document.getElementById('eq-meals-on').checked;
+  document.getElementById('eq-meals-box').classList.toggle('hidden', !on);
 }
 
 function onQuarters(ev) {
@@ -415,6 +497,21 @@ function init() {
     document.getElementById('draw-result').classList.add('hidden');
   });
   document.getElementById('eq-form').addEventListener('submit', onEquipment);
+  document.getElementById('eq-meals-on').addEventListener('change', toggleMealsBox);
+  document.getElementById('eq-add-meal').addEventListener('click', () => {
+    mealSeq += 1;
+    mealRows.push({
+      id: mealSeq,
+      label: '時段',
+      durationMin: 30,
+      windowStart: '15:00',
+      windowEnd: '16:00',
+      preferStart: '15:15',
+    });
+    renderMealRows();
+  });
+  renderMealRows();
+  toggleMealsBox();
   document.getElementById('q-form').addEventListener('submit', onQuarters);
   document.getElementById('d-date').value = localISODate();
   document.getElementById('q-deadline').value = localISODate();

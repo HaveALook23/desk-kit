@@ -12,7 +12,7 @@
 - 公務員退休金粗算（NPS 最高折算 50%，OPS 最高 25%）
 - 更表（香港本地日期）
 - 抽假（`crypto.getRandomValues` + 雜湊紀錄）
-- 裝備時間分配
+- 裝備時間分配（可預留早餐／午餐等固定時段，其餘平均分）
 - 宿舍計分（標明非正式）
 
 法律數字集中在 [`site/data/legal-data.js`](site/data/legal-data.js)，並顯示最後核實日期。
