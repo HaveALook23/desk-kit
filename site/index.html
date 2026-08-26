@@ -70,7 +70,7 @@
         </article>
         <article class="card">
           <h2>裝備時間分配</h2>
-          <p>可預留早餐／午餐等固定時段（落在合理食用時間），其餘裝備時間平均分。</p>
+          <p>可預留固定用餐時段（落在合理時間），其餘裝備時間平均分。</p>
           <button class="linkish" type="button" data-view="equipment">開啟</button>
         </article>
         <article class="card">
@@ -383,7 +383,7 @@
     <section id="view-equipment" class="view">
       <article class="card">
         <h2>裝備時間分配</h2>
-        <p class="hint">預設例子：08:10–16:00，早餐 30 分鐘（約 08:30）、午餐 60 分鐘（約 12:00）。固定時段可加多於一段；其餘裝備時間才平均分給 A、B、C…</p>
+        <p class="hint">預設例子：08:10–16:00，預留午餐 60 分鐘（想開始 12:00）。可再加時段；其餘裝備時間才平均分給 A、B、C…</p>
         <form id="eq-form">
           <div class="row two">
             <div>
@@ -404,7 +404,7 @@
             預留固定用餐／休息時段，其餘平均分配
           </label>
           <div id="eq-meals-box">
-            <p class="hint">「由／至」是可接受範圍。「想開始」是實際落點（早餐預設 08:30、午餐 12:00）。範圍太窄或幾段重疊時會自動錯開。</p>
+            <p class="hint">「由／至」是可接受範圍。「想開始」是實際落點（午餐預設 12:00）。時間用 24 小時、每 5 分鐘一格。範圍太窄或幾段重疊時會自動錯開。</p>
             <div id="eq-meals-list"></div>
             <div class="actions">
               <button class="btn-ghost" type="button" id="eq-add-meal">加時段</button>
