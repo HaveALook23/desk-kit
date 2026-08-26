@@ -230,7 +230,7 @@ footer {
 
 .meal-row {
   display: grid;
-  grid-template-columns: minmax(7rem, 1fr) 6.8rem minmax(11.5rem, 1fr) minmax(11.5rem, 1fr) minmax(11.5rem, 1fr) 2.8rem;
+  grid-template-columns: minmax(7rem, 1fr) minmax(11.5rem, 1fr) minmax(11.5rem, 1fr) 2.8rem;
   gap: 0.55rem;
   margin-bottom: 0.7rem;
   align-items: end;

@@ -22,26 +22,15 @@ export function clockToMinutes(hhmm) {
 export const MEAL_PRESETS = [
   {
     label: '早餐',
-    durationMin: 30,
-    windowStart: '08:00',
-    windowEnd: '09:30',
-    preferStart: '08:30',
+    windowStart: '08:30',
+    windowEnd: '09:00',
   },
   {
     label: '午餐',
-    durationMin: 60,
-    windowStart: '11:30',
-    windowEnd: '13:30',
-    preferStart: '12:00',
+    windowStart: '12:00',
+    windowEnd: '13:00',
   },
 ];
-
-function preferForLabel(label) {
-  if (label.includes('早')) return '08:30';
-  if (label.includes('午')) return '12:00';
-  if (label.includes('晚') || label.includes('夜')) return '18:30';
-  return null;
-}
 
 function toAbs(clockMins, shiftStart, shiftEnd) {
   let t = clockMins;
@@ -100,29 +89,20 @@ function resolveShiftRange(input) {
 function placeMeals(shiftStart, shiftEnd, breaks) {
   const placed = [];
   const pending = breaks.map((b, i) => {
-    const duration = Math.floor(Number(b.durationMin));
     const label = String(b.label || `時段 ${i + 1}`).trim() || `時段 ${i + 1}`;
     const windowStartClock = clockToMinutes(b.windowStart);
     const windowEndClock = clockToMinutes(b.windowEnd);
-    const preferClock =
-      clockToMinutes(b.preferStart) ??
-      clockToMinutes(preferForLabel(label));
     return {
       index: i,
       label,
-      duration,
       windowStartClock,
       windowEndClock,
-      preferClock,
     };
   });
 
   for (const b of pending) {
-    if (!Number.isFinite(b.duration) || b.duration < 1) {
-      return { error: `「${b.label}」時長須為正整數分鐘。` };
-    }
     if (b.windowStartClock == null || b.windowEndClock == null) {
-      return { error: `「${b.label}」請輸入有效的食用時段。` };
+      return { error: `「${b.label}」請輸入有效的由／至時間。` };
     }
   }
 
@@ -137,22 +117,22 @@ function placeMeals(shiftStart, shiftEnd, breaks) {
     let ws = toAbs(b.windowStartClock, shiftStart, shiftEnd);
     let we = toAbs(b.windowEndClock, shiftStart, shiftEnd);
     if (we <= ws) we += 24 * 60;
+    const duration = we - ws;
+    if (duration < 1) {
+      return { error: `「${b.label}」由／至時長無效。` };
+    }
     const availStart = Math.max(shiftStart, ws);
     const availEnd = Math.min(shiftEnd, we);
-    if (availEnd - availStart < b.duration) {
+    if (availEnd - availStart < duration) {
       return {
-        error: `「${b.label}」的食用時段與當更時間重疊不足 ${b.duration} 分鐘。`,
+        error: `「${b.label}」的由／至不在當更時間內，或與當更重疊不足。`,
       };
     }
-    const preferRaw =
-      b.preferClock == null
-        ? Math.floor((availStart + availEnd - b.duration) / 2)
-        : toAbs(b.preferClock, shiftStart, shiftEnd);
-    const holes = subtractOccupied(availStart, availEnd, placed);
-    const spot = pickPlacement(holes, b.duration, preferRaw);
+    const holes = subtractOccupied(shiftStart, shiftEnd, placed);
+    const spot = pickPlacement(holes, duration, ws);
     if (!spot) {
       return {
-        error: `無法安插「${b.label}」：與其他固定時段重疊，或食用時段內沒有足夠空檔。`,
+        error: `無法安插「${b.label}」：與其他固定時段重疊。`,
       };
     }
     placed.push({
@@ -160,7 +140,7 @@ function placeMeals(shiftStart, shiftEnd, breaks) {
       label: b.label,
       start: spot.start,
       end: spot.end,
-      minutes: b.duration,
+      minutes: duration,
     });
   }
 

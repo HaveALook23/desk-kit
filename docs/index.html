@@ -9,7 +9,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="stylesheet" href="./css/app.css?v=260826d">
+  <link rel="stylesheet" href="./css/app.css?v=260827a">
 </head>
 <body>
   <header class="top">
@@ -384,16 +384,16 @@
     <section id="view-equipment" class="view">
       <article class="card">
         <h2>裝備時間分配</h2>
-        <p class="hint">預設例子：08:10–16:00，預留午餐 60 分鐘（想開始 12:00）。可再加時段；其餘裝備時間才平均分給 A、B、C…</p>
+        <p class="hint">預設 08:10–16:00，午餐 12:00–13:00。由／至就是實際預留時段。其餘裝備時間平均分。</p>
         <form id="eq-form">
           <div class="row two">
             <div>
-              <label for="eq-start">開始</label>
-              <input id="eq-start" type="time" value="08:10" required>
+              <label>開始</label>
+              <div id="eq-start-box"></div>
             </div>
             <div>
-              <label for="eq-end">結束</label>
-              <input id="eq-end" type="time" value="16:00" required>
+              <label>結束</label>
+              <div id="eq-end-box"></div>
             </div>
             <div>
               <label for="eq-n">人數</label>
@@ -405,7 +405,7 @@
             預留固定用餐／休息時段，其餘平均分配
           </label>
           <div id="eq-meals-box">
-            <p class="hint">「由／至」是可接受範圍。「想開始」是實際落點（午餐預設 12:00）。時間用 24 小時、每 5 分鐘一格。範圍太窄或幾段重疊時會自動錯開。</p>
+            <p class="hint">由／至是實際預留時段，24 小時、每 5 分鐘一格。兩段撞時間會自動錯開。</p>
             <div id="eq-meals-list"></div>
             <div class="actions">
               <button class="btn-ghost" type="button" id="eq-add-meal">加時段</button>
@@ -529,9 +529,9 @@
     </section>
 
     <footer>
-      Desk Kit 是靜態網頁，在你的瀏覽器運算。非正式官方工具。頁面版本 26/08/2026 23:57。
+      Desk Kit 是靜態網頁，在你的瀏覽器運算。非正式官方工具。頁面版本 27/08/2026 01:40。
     </footer>
   </main>
-  <script type="module" src="./js/app.js?v=260826d"></script>
+  <script type="module" src="./js/app.js?v=260827a"></script>
 </body>
 </html>

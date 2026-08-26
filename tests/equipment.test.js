@@ -59,10 +59,8 @@ test('user can add a third fixed slot', () => {
       ...MEAL_PRESETS,
       {
         label: '下午茶',
-        durationMin: 15,
-        windowStart: '15:00',
-        windowEnd: '15:45',
-        preferStart: '15:15',
+        windowStart: '15:15',
+        windowEnd: '15:30',
       },
     ],
   });
@@ -91,17 +89,13 @@ test('overlapping meal windows are staggered instead of stacked', () => {
     breaks: [
       {
         label: '早餐',
-        durationMin: 60,
         windowStart: '08:00',
-        windowEnd: '10:00',
-        preferStart: '08:00',
+        windowEnd: '09:00',
       },
       {
         label: '加餐',
-        durationMin: 60,
         windowStart: '08:30',
-        windowEnd: '11:00',
-        preferStart: '08:30',
+        windowEnd: '09:30',
       },
     ],
   });

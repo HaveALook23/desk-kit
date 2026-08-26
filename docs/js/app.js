@@ -628,10 +628,16 @@ function onEquipment(ev) {
   ev.preventDefault();
   const useMeals = document.getElementById('eq-meals-on').checked;
   const r = splitEquipmentWindow({
-    startClock: document.getElementById('eq-start').value,
-    endClock: document.getElementById('eq-end').value,
+    startClock: eqStartClock,
+    endClock: eqEndClock,
     staffCount: document.getElementById('eq-n').value,
-    breaks: useMeals ? mealRows.map((row) => ({ ...row })) : [],
+    breaks: useMeals
+      ? mealRows.map((row) => ({
+          label: row.label,
+          windowStart: row.windowStart,
+          windowEnd: row.windowEnd,
+        }))
+      : [],
   });
   const box = document.getElementById('eq-result');
   clearNode(box);
@@ -674,14 +680,15 @@ function onEquipment(ev) {
   box.append(el('div', { class: 'actions' }, copyBtn));
 }
 
+let eqStartClock = '08:10';
+let eqEndClock = '16:00';
+
 let mealRows = [
   {
     id: 1,
     label: '午餐',
-    durationMin: 60,
-    windowStart: '11:30',
-    windowEnd: '13:30',
-    preferStart: '12:00',
+    windowStart: '12:00',
+    windowEnd: '13:00',
   },
 ];
 let mealSeq = mealRows.length;
@@ -696,13 +703,13 @@ function joinClock(h, min) {
   return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
 }
 
-function snapFive(n) {
-  const x = Math.round(Number(n) / 5) * 5;
+function snapStep(n, step) {
+  const x = Math.round(Number(n) / step) * step;
   if (!Number.isFinite(x)) return 0;
-  return Math.min(55, Math.max(0, x));
+  return Math.min(60 - step, Math.max(0, x));
 }
 
-function time24(clock, onChange) {
+function time24(clock, onChange, step = 5) {
   const parsed = parseClockParts(clock);
   const hour = el('select', { class: 'time-h' });
   for (let i = 0; i < 24; i += 1) {
@@ -711,8 +718,8 @@ function time24(clock, onChange) {
     hour.append(opt);
   }
   const minute = el('select', { class: 'time-m' });
-  const snapped = snapFive(parsed.min);
-  for (let i = 0; i < 60; i += 5) {
+  const snapped = step === 1 ? parsed.min : snapStep(parsed.min, step);
+  for (let i = 0; i < 60; i += step) {
     const opt = el('option', { value: String(i), text: String(i).padStart(2, '0') });
     if (i === snapped) opt.selected = true;
     minute.append(opt);
@@ -724,6 +731,16 @@ function time24(clock, onChange) {
   return el('div', { class: 'time-24' }, hour, el('span', { class: 'time-colon', text: ':' }), minute);
 }
 
+function renderShiftClocks() {
+  const startBox = document.getElementById('eq-start-box');
+  const endBox = document.getElementById('eq-end-box');
+  if (!startBox || !endBox) return;
+  clearNode(startBox);
+  clearNode(endBox);
+  startBox.append(time24(eqStartClock, (v) => { eqStartClock = v; }, 1));
+  endBox.append(time24(eqEndClock, (v) => { eqEndClock = v; }, 1));
+}
+
 function renderMealRows() {
   const box = document.getElementById('eq-meals-list');
   clearNode(box);
@@ -732,13 +749,6 @@ function renderMealRows() {
     label.value = row.label;
     label.addEventListener('input', () => {
       row.label = label.value;
-    });
-    const dur = el('input', { type: 'number', min: '5', max: '240', step: '5' });
-    dur.value = String(row.durationMin);
-    dur.addEventListener('change', () => {
-      const snapped = Math.min(240, Math.max(5, snapFive(dur.value) || 5));
-      row.durationMin = snapped;
-      dur.value = String(snapped);
     });
     const del = el('button', {
       class: 'btn-ghost btn-icon',
@@ -754,10 +764,8 @@ function renderMealRows() {
     const wrap = el('div', { class: 'meal-row' });
     wrap.append(
       labeled('名稱', label),
-      labeled('時長（分）', dur),
-      labeled('由', time24(row.windowStart, (v) => { row.windowStart = v; })),
-      labeled('至', time24(row.windowEnd, (v) => { row.windowEnd = v; })),
-      labeled('想開始', time24(row.preferStart || '12:00', (v) => { row.preferStart = v; })),
+      labeled('由', time24(row.windowStart, (v) => { row.windowStart = v; }, 5)),
+      labeled('至', time24(row.windowEnd, (v) => { row.windowEnd = v; }, 5)),
       del,
     );
     box.append(wrap);
@@ -858,13 +866,12 @@ function init() {
     mealRows.push({
       id: mealSeq,
       label: '',
-      durationMin: 30,
       windowStart: '15:00',
       windowEnd: '16:00',
-      preferStart: '15:15',
     });
     renderMealRows();
   });
+  renderShiftClocks();
   renderMealRows();
   toggleMealsBox();
   document.getElementById('q-form').addEventListener('submit', onQuarters);
