@@ -237,5 +237,13 @@ footer {
 .tl-time { font-variant-numeric: tabular-nums; font-weight: 700; }
 .tl-mins { color: var(--muted); font-size: 0.86rem; }
 
+.table-wrap { overflow-x: auto; margin: 0.6rem 0 0.8rem; }
+#cspf-fund-table { font-size: 0.78rem; }
+#cspf-fund-table th { white-space: nowrap; }
+#cspf-fund-table td:nth-child(2) { text-align: left; }
+.ret-up { color: #166534; }
+.ret-down { color: #9f1239; }
+.dis-row { background: #eef6ff; }
+
 .sources li { margin: 0.35rem 0; }
 .hidden { display: none !important; }

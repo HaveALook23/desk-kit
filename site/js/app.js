@@ -8,7 +8,8 @@ import {
 } from './util.js';
 import { calculateTobacco } from './tobacco.js';
 import { calculatePension, commutationOptions } from './pension.js';
-import { lookupCspf, projectSandbox } from './cspf.js';
+import { lookupCspf, projectSandbox, filterCspfFunds } from './cspf.js';
+import { CSPF_FUNDS } from '../data/cspf-funds.js';
 import { SHIFT_PATTERNS, monthGrid, shiftOnDate } from './shift.js';
 import { runLeaveDraw } from './draw.js';
 import { calculateQuartersPoints } from './quarters.js';
@@ -194,6 +195,99 @@ function fillSchemeList(id, items) {
 function renderCspfSchemes() {
   fillSchemeList('cspf-schemes-2026', LEGAL_DATA.cspf.schemes2026);
   fillSchemeList('cspf-schemes-old', LEGAL_DATA.cspf.schemesBefore2026);
+  renderCspfRateTables();
+  fillCspfFundSchemeOptions();
+  const asof = document.getElementById('cspf-fund-asof');
+  if (asof) asof.textContent = CSPF_FUNDS.asOf;
+  renderCspfFundTable();
+}
+
+function renderCspfRateTables() {
+  const box = document.getElementById('cspf-rate-tables');
+  if (!box || box.dataset.ready) return;
+  box.dataset.ready = '1';
+  const labels = {
+    legacy: '2000–2015 入職且未延長服務',
+    extended: '已延長服務，或 2015-06-01 後入職',
+  };
+  for (const [key, title] of Object.entries(labels)) {
+    box.append(el('h4', { text: title }));
+    const table = el('table');
+    const thead = el('tr', {}, el('th', { text: '無間斷服務年期' }), el('th', { text: '政府供款率' }));
+    table.append(el('thead', {}, thead));
+    const tb = el('tbody');
+    LEGAL_DATA.cspf.schedules[key].forEach((row) => {
+      tb.append(
+        el(
+          'tr',
+          {},
+          el('td', { text: row.label }),
+          el('td', { text: `${(row.rate * 100).toFixed(0)}%` }),
+        ),
+      );
+    });
+    table.append(tb);
+    box.append(table);
+  }
+  box.append(el('p', { class: 'hint', text: '紀律部隊另加基本薪金 2.5% 特別供款，不包括在上表。' }));
+}
+
+function fillCspfFundSchemeOptions() {
+  const sel = document.getElementById('cspf-fund-scheme');
+  if (!sel || sel.dataset.ready) return;
+  sel.dataset.ready = '1';
+  const names = [...new Set(CSPF_FUNDS.funds.map((f) => f.scheme))];
+  names.forEach((name) => sel.append(el('option', { value: name, text: name })));
+}
+
+function fmtRet(n) {
+  if (n == null || Number.isNaN(n)) return '—';
+  const sign = n > 0 ? '+' : '';
+  return `${sign}${n.toFixed(2)}`;
+}
+
+function retClass(n) {
+  if (n == null || Number.isNaN(n)) return '';
+  if (n > 0) return 'ret-up';
+  if (n < 0) return 'ret-down';
+  return '';
+}
+
+function shortScheme(name) {
+  if (name.includes('滙豐')) return '滙豐';
+  if (name.includes('宏利')) return '宏利';
+  if (name.includes('永明')) return '永明';
+  return name;
+}
+
+function renderCspfFundTable() {
+  const tbody = document.querySelector('#cspf-fund-table tbody');
+  if (!tbody) return;
+  const scheme = document.getElementById('cspf-fund-scheme').value;
+  const kind = document.getElementById('cspf-fund-kind').value;
+  const query = document.getElementById('cspf-fund-q').value;
+  const rows = filterCspfFunds(CSPF_FUNDS.funds, { scheme, kind, query }).slice();
+  rows.sort((a, b) => (b.y2025 ?? -999) - (a.y2025 ?? -999));
+  clearNode(tbody);
+  rows.forEach((f) => {
+    const tr = el('tr', { class: f.dis ? 'dis-row' : '' });
+    const cells = [
+      shortScheme(f.scheme),
+      f.fund,
+      f.category.split(' - ')[0],
+      f.risk || '—',
+      f.fer == null ? '—' : f.fer.toFixed(2),
+    ];
+    cells.forEach((txt) => tr.append(el('td', { text: txt })));
+    for (const key of ['y2025', 'y2024', 'y2023', 'y2022', 'y2021']) {
+      tr.append(el('td', { class: retClass(f[key]), text: fmtRet(f[key]) }));
+    }
+    tbody.append(tr);
+  });
+  const count = document.getElementById('cspf-fund-count');
+  if (count) {
+    count.textContent = `顯示 ${rows.length} / ${CSPF_FUNDS.funds.length} 隻。預設投資策略（核心累積／65歲後）會標示。`;
+  }
 }
 
 function onCspf(ev) {
@@ -581,6 +675,10 @@ function init() {
   });
   document.getElementById('cspf-form').addEventListener('submit', onCspf);
   document.getElementById('cspf-proj-form').addEventListener('submit', onCspfProj);
+  ['cspf-fund-scheme', 'cspf-fund-kind', 'cspf-fund-q'].forEach((id) => {
+    document.getElementById(id).addEventListener('input', renderCspfFundTable);
+    document.getElementById(id).addEventListener('change', renderCspfFundTable);
+  });
   renderCspfSchemes();
   document.getElementById('shift-month').addEventListener('change', renderRoster);
   document.getElementById('add-staff').addEventListener('click', () => {

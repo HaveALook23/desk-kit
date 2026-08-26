@@ -45,3 +45,14 @@ test('sandbox 0% return is just contributions plus balance', () => {
   });
   assert.equal(r.futureValue, 140000);
 });
+
+test('fund filter by scheme and kind', async () => {
+  const { filterCspfFunds } = await import('../site/js/cspf.js');
+  const { CSPF_FUNDS } = await import('../site/data/cspf-funds.js');
+  const hsbc = filterCspfFunds(CSPF_FUNDS.funds, { scheme: '滙豐強積金智選計劃' });
+  assert.ok(hsbc.length >= 15);
+  assert.ok(hsbc.every((f) => f.scheme.includes('滙豐')));
+  const cons = filterCspfFunds(CSPF_FUNDS.funds, { kind: 'conservative' });
+  assert.ok(cons.length >= 3);
+  assert.ok(cons.every((f) => f.category.includes('保守基金')));
+});

@@ -65,3 +65,13 @@ export function projectSandbox({ monthlyAmount, years, annualReturnPct, currentB
     fromContrib: roundMoney(contribFv, 0),
   };
 }
+
+export function filterCspfFunds(funds, { scheme = '', kind = '', query = '' } = {}) {
+  const q = String(query || '').trim().toLowerCase();
+  return funds.filter((f) => {
+    if (scheme && f.scheme !== scheme) return false;
+    if (kind && f.kind !== kind) return false;
+    if (q && !`${f.fund} ${f.category}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+}

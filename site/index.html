@@ -224,15 +224,59 @@
             </div>
           </form>
           <div id="cspf-result" class="result hidden"></div>
+          <div id="cspf-rate-tables"></div>
 
-          <h3>基金過往表現怎麼查</h3>
-          <p>不在本站寫死回報數字：基金每日變，寫死就會像過時刑罰一樣靜默出錯。公務員事務局指引是到積金局「強積金基金平台」比較風險、回報、收費。</p>
-          <p class="hint">過往表現不代表將來。結餘、基金比重只在你的受託人帳戶／月結單。</p>
-          <div class="actions">
-            <a class="btn btn-primary" href="https://mfp.mpfa.org.hk/tch/mpp_selection.jsp" target="_blank" rel="noopener">積金局基金平台</a>
-            <a class="btn btn-ghost" href="https://tscplatform.mpfa.org.hk/scp/tch/index.jsp" target="_blank" rel="noopener">受託人服務比較</a>
+          <h3>選定計劃成分基金曆年回報</h3>
+          <p class="hint">資料來自積金局基金資訊表，截至 <span id="cspf-fund-asof"></span>。曆年回報已扣費。過往表現不代表將來；最新數字以積金局平台為準。</p>
+          <div class="row two">
+            <div>
+              <label for="cspf-fund-scheme">計劃</label>
+              <select id="cspf-fund-scheme">
+                <option value="">全部三個 2026 年選定計劃</option>
+              </select>
+            </div>
+            <div>
+              <label for="cspf-fund-kind">基金類別</label>
+              <select id="cspf-fund-kind">
+                <option value="">全部</option>
+                <option value="equity">股票</option>
+                <option value="mixed">混合資產</option>
+                <option value="bond">債券</option>
+                <option value="guaranteed">保證</option>
+                <option value="conservative">強積金保守基金</option>
+                <option value="money">其他貨幣市場</option>
+              </select>
+            </div>
+            <div>
+              <label for="cspf-fund-q">搜尋基金名稱</label>
+              <input id="cspf-fund-q" type="search" placeholder="例如 核心累積、恒指">
+            </div>
           </div>
-          <h4>2026 年選定的集成信託計劃</h4>
+          <p class="hint" id="cspf-fund-count"></p>
+          <div class="table-wrap">
+            <table id="cspf-fund-table">
+              <thead>
+                <tr>
+                  <th>計劃</th>
+                  <th>成分基金</th>
+                  <th>類別</th>
+                  <th>風險</th>
+                  <th>開支%</th>
+                  <th>2025</th>
+                  <th>2024</th>
+                  <th>2023</th>
+                  <th>2022</th>
+                  <th>2021</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="actions">
+            <a class="btn btn-ghost" href="https://mfp.mpfa.org.hk/tch/mpp_list.jsp" target="_blank" rel="noopener">積金局基金資訊表</a>
+            <a class="btn btn-ghost" href="https://mfp.mpfa.org.hk/tch/mpp_selection.jsp" target="_blank" rel="noopener">積金局基金平台</a>
+          </div>
+          <h4>受託人聯絡</h4>
           <ul id="cspf-schemes-2026" class="sources"></ul>
           <h4>2026 年前選定（舊帳戶可能仍在）</h4>
           <ul id="cspf-schemes-old" class="sources"></ul>
@@ -458,7 +502,7 @@
           <li><a href="https://www.csb.gov.hk/english/admin/retirement/cspf/cspfcorner/cspfquestion/2871.html">公務員事務局：供款</a></li>
           <li><a href="https://www.csb.gov.hk/tc_chi/admin/retirement/cspf/cspfcorner/cspfquestion/2872.html">公務員事務局：權益歸屬及發放</a></li>
           <li><a href="https://www.csb.gov.hk/tc_chi/admin/retirement/cspf/cspfcorner/cspfcontact/2863.html">公務員事務局：選定的集成信託計劃</a></li>
-          <li><a href="https://mfp.mpfa.org.hk/tch/mpp_selection.jsp">積金局：強積金基金平台</a></li>
+          <li><a href="https://mfp.mpfa.org.hk/tch/mpp_list.jsp">積金局：基金資訊表（本站回報截至 31/07/2026）</a></li>
         </ul>
         <h3>不做的事</h3>
         <ul>
