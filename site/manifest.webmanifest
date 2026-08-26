@@ -1,0 +1,10 @@
+{
+  "name": "Desk Kit",
+  "short_name": "Desk Kit",
+  "description": "當值參考工具。非正式官方網站，無離線快取。",
+  "start_url": "./",
+  "display": "browser",
+  "background_color": "#f4f1ea",
+  "theme_color": "#1f3a5f",
+  "lang": "zh-Hant-HK"
+}

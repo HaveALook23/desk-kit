@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Desk Kit · 當值參考工具</title>
+  <meta name="description" content="非官方當值參考工具：煙草稅、退休金折算、更表、抽假。計算結果以官方公布為準。">
+  <meta name="theme-color" content="#1f3a5f">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./css/app.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <h1>Desk Kit</h1>
+      <p>當值參考工具 · 非正式 · 非香港海關／公務員事務局官方網站</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="banner-warn">
+      請勿輸入個人資料、旅客姓名、證件、案件內容、航班、內部程序或任何受限制資料。本站在瀏覽器本機運算，不設留言系統，亦不嵌入第三方 AI。
+    </div>
+
+    <nav class="tabs" aria-label="功能">
+      <button type="button" data-view="home" aria-current="page">首頁</button>
+      <button type="button" data-view="tobacco">煙草稅</button>
+      <button type="button" data-view="pension">退休金</button>
+      <button type="button" data-view="shift">更表</button>
+      <button type="button" data-view="draw">抽假</button>
+      <button type="button" data-view="equipment">時間分配</button>
+      <button type="button" data-view="quarters">宿舍計分</button>
+      <button type="button" data-view="homescreen">加入主畫面</button>
+      <button type="button" data-view="sources">來源與免責</button>
+    </nav>
+
+    <section id="view-home" class="view active">
+      <div class="grid">
+        <article class="card">
+          <h2>煙草稅試算</h2>
+          <p>旅客免稅優惠為「或」關係。混合香煙與雪茄時由你選擇扣哪一項，系統不會自行決定。</p>
+          <button class="linkish" type="button" data-view="tobacco">開啟</button>
+        </article>
+        <article class="card">
+          <h2>退休金試算</h2>
+          <p>NPS 最高折算 50%，OPS 最高 25%。只覆蓋正常退休粗算，特殊情況請用公務員事務局計算器。</p>
+          <button class="linkish" type="button" data-view="pension">開啟</button>
+        </article>
+        <article class="card">
+          <h2>更表</h2>
+          <p>以香港本地日期為錨，不用 UTC 日期。</p>
+          <button class="linkish" type="button" data-view="shift">開啟</button>
+        </article>
+        <article class="card">
+          <h2>抽假</h2>
+          <p>使用 crypto.getRandomValues，並產生輸入／結果雜湊。可隨機，但刷新可重抽，不能單獨證明「只抽過一次」。</p>
+          <button class="linkish" type="button" data-view="draw">開啟</button>
+        </article>
+        <article class="card">
+          <h2>裝備時間分配</h2>
+          <p>把時段平均分給 A、B、C… 人員。</p>
+          <button class="linkish" type="button" data-view="equipment">開啟</button>
+        </article>
+        <article class="card">
+          <h2>宿舍計分</h2>
+          <p>部門風格參考公式，非正式官方計算器。</p>
+          <button class="linkish" type="button" data-view="quarters">開啟</button>
+        </article>
+      </div>
+    </section>
+
+    <section id="view-tobacco" class="view">
+      <article class="card">
+        <h2>煙草應課稅試算</h2>
+        <p class="hint">最後核實：<span data-bind="verified"></span>。免稅優惠公開規則是 19 支香煙<strong>或</strong> 1 支／25 克雪茄<strong>或</strong> 25 克其他製成煙草，不是同時享有。</p>
+        <form id="tobacco-form">
+          <div class="row two">
+            <div>
+              <label for="t-sticks">香煙支數</label>
+              <input id="t-sticks" type="number" min="0" step="1" value="0">
+            </div>
+            <div>
+              <label for="t-long">長逾 90mm 額外視作支數</label>
+              <input id="t-long" type="number" min="0" step="1" value="0">
+              <p class="hint">不包括濾嘴或煙嘴口。每增加 90mm 或不足 90mm 視作另一支。</p>
+            </div>
+            <div>
+              <label for="t-cigar">雪茄重量（克）</label>
+              <input id="t-cigar" type="number" min="0" step="0.1" value="0">
+            </div>
+            <div>
+              <label for="t-other">其他製成煙草（克）</label>
+              <input id="t-other" type="number" min="0" step="0.1" value="0">
+            </div>
+            <div>
+              <label for="t-age">旅客年齡</label>
+              <input id="t-age" type="number" min="0" value="30">
+            </div>
+            <div>
+              <label for="t-role">身分</label>
+              <select id="t-role">
+                <option value="passenger">年滿 18 歲一般旅客</option>
+                <option value="driver">跨境司機</option>
+                <option value="commercial">貿易／商業用途</option>
+              </select>
+            </div>
+            <div>
+              <label for="t-decl">通道／申報</label>
+              <select id="t-decl">
+                <option value="undeclared">未申報／綠通道截獲</option>
+                <option value="declared">紅通道主動申報</option>
+              </select>
+            </div>
+            <div>
+              <label for="t-conc">選用哪一項旅客免稅優惠</label>
+              <select id="t-conc">
+                <option value="cigarettes">19 支香煙</option>
+                <option value="cigars">1 支雪茄／25 克雪茄</option>
+                <option value="other">25 克其他製成煙草</option>
+                <option value="none">不使用免稅優惠</option>
+              </select>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn-primary" type="submit">計算</button>
+            <button class="btn-ghost" type="reset">重置</button>
+          </div>
+        </form>
+        <div id="tobacco-result" class="result hidden"></div>
+      </article>
+    </section>
+
+    <section id="view-pension" class="view">
+      <article class="card">
+        <h2>公務員退休金粗算</h2>
+        <p class="hint">最後核實：<span data-bind="verified"></span>。只覆蓋正常退休；運作需要退休、喪失工作能力、超額人員請用公務員事務局官方計算器。</p>
+        <form id="pension-form">
+          <div class="row two">
+            <div>
+              <label for="p-scheme">計劃</label>
+              <select id="p-scheme">
+                <option value="nps">新退休金計劃 NPS</option>
+                <option value="ops">舊退休金計劃 OPS</option>
+              </select>
+            </div>
+            <div>
+              <label for="p-class">人員類別</label>
+              <select id="p-class">
+                <option value="A">甲類</option>
+                <option value="B">乙類</option>
+              </select>
+            </div>
+            <div>
+              <label for="p-salary">最高可計算退休金月薪（港元）</label>
+              <input id="p-salary" type="number" min="0" step="1" required>
+            </div>
+            <div>
+              <label for="p-commute">折算為一筆過酬金的比例</label>
+              <select id="p-commute"></select>
+              <p class="hint" id="p-commute-hint"></p>
+            </div>
+            <div>
+              <label for="p-appoint">首次按可享退休金條款受聘日期</label>
+              <input id="p-appoint" type="date" required>
+            </div>
+            <div>
+              <label for="p-retire">退休日期（開始發放退休金）</label>
+              <input id="p-retire" type="date" required>
+            </div>
+            <div>
+              <label for="p-exclude">不計算月數（例如無薪假期）</label>
+              <input id="p-exclude" type="number" min="0" step="1" value="0">
+            </div>
+            <div id="p-pre1987-wrap">
+              <label for="p-pre1987">乙類：1987-04-01 前的月數（NPS）</label>
+              <input id="p-pre1987" type="number" min="0" step="1" value="0">
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn-primary" type="submit">計算</button>
+            <a class="btn btn-ghost" href="https://www.csb.gov.hk/english/admin/retirement/185.html" target="_blank" rel="noopener">官方計算器</a>
+          </div>
+        </form>
+        <div id="pension-result" class="result hidden"></div>
+      </article>
+    </section>
+
+    <section id="view-shift" class="view">
+      <article class="card">
+        <h2>更表</h2>
+        <p class="hint">錨點日期使用瀏覽器本地日曆，不用 UTC。資料只留在此分頁。</p>
+        <div class="row two">
+          <div>
+            <label for="shift-month">顯示月份</label>
+            <input id="shift-month" type="month">
+          </div>
+        </div>
+        <h3>人員</h3>
+        <div id="staff-config"></div>
+        <div class="actions">
+          <button class="btn-ghost" type="button" id="add-staff">加人</button>
+        </div>
+        <div id="shift-table" class="result"></div>
+      </article>
+    </section>
+
+    <section id="view-draw" class="view">
+      <article class="card">
+        <h2>抽假</h2>
+        <p class="hint">使用密碼學安全亂數。結果可複製核對雜湊，但本頁可重新抽取，不能證明現場只抽過一次。正式場合應另作書面紀錄及見證。</p>
+        <form id="draw-form">
+          <div class="row two">
+            <div>
+              <label for="d-date">放假日期</label>
+              <input id="d-date" type="date">
+            </div>
+            <div>
+              <label for="d-witness">見證人（顯示用，非加密證明）</label>
+              <input id="d-witness" type="text" maxlength="80" placeholder="現場見證人姓名">
+            </div>
+            <div>
+              <label for="d-quota">名額</label>
+              <input id="d-quota" type="number" min="1" value="1">
+            </div>
+            <div>
+              <label for="d-rounds">抽籤次數</label>
+              <input id="d-rounds" type="number" min="1" max="20" value="1">
+            </div>
+          </div>
+          <div>
+            <label for="d-names">名單（每行一個）</label>
+            <textarea id="d-names" placeholder="每行一個姓名"></textarea>
+          </div>
+          <div class="actions">
+            <button class="btn-primary" type="submit">抽取</button>
+            <button class="btn-ghost" type="button" id="draw-new">新一輪</button>
+          </div>
+        </form>
+        <div id="draw-result" class="result hidden"></div>
+      </article>
+    </section>
+
+    <section id="view-equipment" class="view">
+      <article class="card">
+        <h2>裝備時間分配</h2>
+        <form id="eq-form">
+          <div class="row two">
+            <div>
+              <label for="eq-sh">開始小時</label>
+              <input id="eq-sh" type="number" min="0" max="23" value="8">
+            </div>
+            <div>
+              <label for="eq-sm">開始分鐘</label>
+              <input id="eq-sm" type="number" min="0" max="59" value="0">
+            </div>
+            <div>
+              <label for="eq-eh">結束小時</label>
+              <input id="eq-eh" type="number" min="0" max="23" value="16">
+            </div>
+            <div>
+              <label for="eq-em">結束分鐘</label>
+              <input id="eq-em" type="number" min="0" max="59" value="0">
+            </div>
+            <div>
+              <label for="eq-n">人數</label>
+              <input id="eq-n" type="number" min="1" max="26" value="4">
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn-primary" type="submit">分配</button>
+          </div>
+        </form>
+        <div id="eq-result" class="result hidden"></div>
+      </article>
+    </section>
+
+    <section id="view-quarters" class="view">
+      <article class="card">
+        <h2>宿舍計分（非正式）</h2>
+        <p class="hint">此公式並非公務員事務局公開計算器，只作部門風格參考。分數不能當作編配結果。</p>
+        <form id="q-form">
+          <div class="row two">
+            <div>
+              <label for="q-salary">月薪</label>
+              <input id="q-salary" type="number" min="0" step="1">
+            </div>
+            <div>
+              <label for="q-appointment">受聘日期</label>
+              <input id="q-appointment" type="date">
+            </div>
+            <div>
+              <label for="q-deadline">計算截止日期</label>
+              <input id="q-deadline" type="date">
+            </div>
+            <div>
+              <label for="q-days">不計算日數</label>
+              <input id="q-days" type="number" min="0" value="0">
+            </div>
+            <div>
+              <label for="q-marital">婚姻狀況</label>
+              <select id="q-marital">
+                <option value="Single">單身</option>
+                <option value="Married">已婚</option>
+                <option value="Widowed">喪偶</option>
+                <option value="Separated">分居</option>
+                <option value="Divorced">離婚</option>
+              </select>
+            </div>
+            <div>
+              <label for="q-spouse">配偶同住</label>
+              <select id="q-spouse">
+                <option value="No">否</option>
+                <option value="Yes">是</option>
+              </select>
+            </div>
+            <div>
+              <label for="q-childhk">在港子女人數</label>
+              <input id="q-childhk" type="number" min="0" value="0">
+            </div>
+            <div>
+              <label for="q-childout">境外子女人數</label>
+              <input id="q-childout" type="number" min="0" value="0">
+            </div>
+            <div>
+              <label for="q-childexp">預期子女人數</label>
+              <input id="q-childexp" type="number" min="0" value="0">
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn-primary" type="submit">計算</button>
+          </div>
+        </form>
+        <div id="q-result" class="result hidden"></div>
+      </article>
+    </section>
+
+    <section id="view-homescreen" class="view">
+      <article class="card">
+        <h2>加入手機主畫面</h2>
+        <p>這不是可離線運作的完整 PWA：沒有 service worker，也沒有離線快取。下面只是系統內建的「加入主畫面／安裝捷徑」。</p>
+        <ul>
+          <li><strong>iPhone／iPad（Safari）</strong>：分享 → 加入主畫面。</li>
+          <li><strong>Android（Chrome）</strong>：選單 → 加入主畫面／安裝應用程式。</li>
+        </ul>
+        <p class="hint">如果系統沒有顯示安裝提示，用瀏覽器選單手動加入即可。</p>
+      </article>
+    </section>
+
+    <section id="view-sources" class="view">
+      <article class="card">
+        <h2>資料來源與免責</h2>
+        <p>本工具最後核實日期：<strong data-bind="verified"></strong>。法律、稅率、刑罰及退休金以官方頁面及庫務署／公務員事務局計算為準。本站結果只供參考，不是法律意見、不是檢控決定、不是退休金批核。</p>
+        <h3>煙草／應課稅品</h3>
+        <ul class="sources">
+          <li><a href="https://www.customs.gov.hk/tc/service-enforcement-information/trade-facilitation/dutiable-commodities/types-and-duty-rates/index.html">香港海關：種類及稅率</a></li>
+          <li><a href="https://www.customs.gov.hk/tc/service-enforcement-information/passenger-clearance/duty-free-concessions/index.html">香港海關：免稅優惠</a></li>
+          <li><a href="https://www.customs.gov.hk/tc/service-enforcement-information/passenger-clearance/faqs/common-charges-penalties/index.html">香港海關：常見控罪及刑罰</a></li>
+          <li><a href="https://www.info.gov.hk/gia/general/202403/18/P2024031800529.htm">政府新聞公報 18/03/2024（Compounding Scheme：5 倍稅款 + $2,000）</a></li>
+          <li><a href="https://www.info.gov.hk/gia/general/202509/25/P2025092300405.htm">立法會書面答覆 25/09/2025（有代價地不予檢控 $2,000 → $5,000）</a></li>
+        </ul>
+        <h3>退休金</h3>
+        <ul class="sources">
+          <li><a href="https://www.csb.gov.hk/english/admin/retirement/185.html">公務員事務局：Pension calculator</a></li>
+          <li><a href="https://www.csb.gov.hk/english/admin/retirement/2541.html">公務員事務局：退休福利常見問題</a></li>
+          <li><a href="https://www.csb.gov.hk/english/admin/retirement/files/guide_nps.doc">NPS 計算指引</a></li>
+          <li><a href="https://www.csb.gov.hk/english/admin/retirement/files/guide_ops.doc">OPS 計算指引</a></li>
+          <li><a href="https://www.try.gov.hk/internet/ehpens_faq.html">庫務署：Pensioners FAQ</a></li>
+        </ul>
+        <h3>不做的事</h3>
+        <ul>
+          <li>不嵌入第三方 AI（避免案件／內部資料外傳）。</li>
+          <li>不設留言後端（避免「匿名」被誤解為不可追查）。</li>
+          <li>不把宿舍計分或特殊退休情況寫成官方結果。</li>
+        </ul>
+      </article>
+    </section>
+
+    <footer>
+      Desk Kit 是靜態網頁，在你的瀏覽器運算。非正式官方工具。資料核實日期見各頁。
+    </footer>
+  </main>
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
