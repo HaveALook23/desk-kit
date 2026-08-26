@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   MEAL_PRESETS,
   splitEquipmentWindow,
-} from '../site/js/equipment.js';
+} from '../docs/js/equipment.js';
 
 test('equal split without meals keeps old behaviour', () => {
   const r = splitEquipmentWindow({

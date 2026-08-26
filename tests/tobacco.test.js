@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { calculateTobacco, CONCESSION_CIGARETTES, CONCESSION_CIGARS } from '../site/js/tobacco.js';
+import { calculateTobacco, CONCESSION_CIGARETTES, CONCESSION_CIGARS } from '../docs/js/tobacco.js';
 
 test('19 cigarettes passenger, cigarettes concession → no excess', () => {
   const r = calculateTobacco({

@@ -16,7 +16,7 @@
 - 裝備時間分配（可預留早餐／午餐等固定時段，其餘平均分）
 - 宿舍計分（標明非正式）
 
-法律數字集中在 [`site/data/legal-data.js`](site/data/legal-data.js)，並顯示最後核實日期。
+法律數字集中在 [`docs/data/legal-data.js`](docs/data/legal-data.js)，並顯示最後核實日期。
 
 ## 這不是什麼
 
@@ -32,13 +32,13 @@
 npm test
 ```
 
-用任何靜態伺服器開 `site/`，例如：
+用任何靜態伺服器開 `docs/`，例如：
 
 ```bash
 npx --yes serve site
 ```
 
-GitHub Pages 只部署 `site/`，workflow 只有一條 Pages 部署（另有一條測試，不會互搶上線內容）。
+GitHub Pages GitHub Pages 從 `main` 的 `/docs` 發佈。
 
 ## 用家點用
 

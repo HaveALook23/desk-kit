@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { calculatePension, commutationOptions } from '../site/js/pension.js';
+import { calculatePension, commutationOptions } from '../docs/js/pension.js';
 
 test('NPS commutation options stop at 50% in 5% steps', () => {
   assert.deepEqual(commutationOptions('nps'), [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]);

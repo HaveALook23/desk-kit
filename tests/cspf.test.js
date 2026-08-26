@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { lookupCspf, projectSandbox } from '../site/js/cspf.js';
+import { lookupCspf, projectSandbox } from '../docs/js/cspf.js';
 
 test('legacy schedule matches CSB bands', () => {
   assert.equal(lookupCspf({ cohort: 'legacy', completedYears: 2 }).govRate, 0.05);
@@ -47,8 +47,8 @@ test('sandbox 0% return is just contributions plus balance', () => {
 });
 
 test('fund filter by scheme and kind', async () => {
-  const { filterCspfFunds } = await import('../site/js/cspf.js');
-  const { CSPF_FUNDS } = await import('../site/data/cspf-funds.js');
+  const { filterCspfFunds } = await import('../docs/js/cspf.js');
+  const { CSPF_FUNDS } = await import('../docs/data/cspf-funds.js');
   const hsbc = filterCspfFunds(CSPF_FUNDS.funds, { scheme: '滙豐強積金智選計劃' });
   assert.ok(hsbc.length >= 15);
   assert.ok(hsbc.every((f) => f.scheme.includes('滙豐')));

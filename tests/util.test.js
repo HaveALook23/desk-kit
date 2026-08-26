@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { localISODate, completedMonths, parseLocalISODate } from '../site/js/util.js';
-import { shiftOnDate } from '../site/js/shift.js';
+import { localISODate, completedMonths, parseLocalISODate } from '../docs/js/util.js';
+import { shiftOnDate } from '../docs/js/shift.js';
 
 test('localISODate uses local calendar, not UTC ISO', () => {
   const d = new Date(2026, 7, 26, 3, 0, 0); // 26/08/2026 03:00 HKT-like local

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { formatDrawRecord, parseNameList, runLeaveDraw } from '../site/js/draw.js';
+import { formatDrawRecord, parseNameList, runLeaveDraw } from '../docs/js/draw.js';
 
 test('parseNameList trims and dedupes', () => {
   assert.deepEqual(parseNameList('  A \nB\nA\n'), ['A', 'B']);
