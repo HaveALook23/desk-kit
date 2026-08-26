@@ -715,9 +715,9 @@ function renderMealRows() {
     wrap.append(
       labeled('名稱', label),
       labeled('時長（分）', dur),
-      labeled('食用由', w0),
-      labeled('食用至', w1),
-      labeled('建議開始', pref),
+      labeled('由', w0),
+      labeled('至', w1),
+      labeled('想開始', pref),
       del,
     );
     box.append(wrap);
